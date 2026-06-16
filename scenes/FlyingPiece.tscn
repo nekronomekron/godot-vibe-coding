@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://basribkh8homu"]
+
+[ext_resource type="Script" path="res://scripts/FlyingPiece.gd" id="1_fp"]
+
+[node name="FlyingPiece" type="Control"]
+mouse_filter = 2
+script = ExtResource("1_fp")

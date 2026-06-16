@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bqu4ct08g1fsq"]
+
+[ext_resource type="Script" path="res://scripts/ItemWidget.gd" id="1_iw"]
+
+[node name="ItemWidget" type="Control"]
+script = ExtResource("1_iw")

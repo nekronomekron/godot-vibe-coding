@@ -1,0 +1,150 @@
+[gd_scene load_steps=5 format=3 uid="uid://bbkpbuildermain1"]
+
+[ext_resource type="Script" path="res://scripts/Main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/Backpack.gd" id="2_bp"]
+[ext_resource type="Script" path="res://scripts/DragLayer.gd" id="3_drag"]
+[ext_resource type="Theme" path="res://assets/ui_theme.tres" id="4_theme"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("4_theme")
+script = ExtResource("1_main")
+
+[node name="BG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.027, 0.04, 0.063, 1)
+
+[node name="Root" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="Margin" type="MarginContainer" parent="Root"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 6
+
+[node name="Top" type="HBoxContainer" parent="Root/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Left" type="VBoxContainer" parent="Root/Margin/Top"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="TitleLeft" type="Label" parent="Root/Margin/Top/Left"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 22
+text = "Raumschiff"
+
+[node name="BackpackFrame" type="PanelContainer" parent="Root/Margin/Top/Left"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Backpack" type="Control" parent="Root/Margin/Top/Left/BackpackFrame"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(420, 360)
+layout_mode = 2
+clip_contents = true
+script = ExtResource("2_bp")
+
+[node name="Hint" type="Label" parent="Root/Margin/Top/Left"]
+layout_mode = 2
+autowrap_mode = 3
+theme_override_colors/font_color = Color(0.5, 0.6, 0.68, 1)
+theme_override_font_sizes/font_size = 13
+text = "Module nur an bestehende Module andocken. Rechtsklick beim Ziehen = drehen. Leere Flaeche/Mausrad ziehen = verschieben, Mausrad = zoomen."
+
+[node name="MerchantPanel" type="PanelContainer" parent="Root/Margin/Top"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(380, 0)
+layout_mode = 2
+
+[node name="MV" type="VBoxContainer" parent="Root/Margin/Top/MerchantPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleM" type="Label" parent="Root/Margin/Top/MerchantPanel/MV"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Werft"
+
+[node name="RefreshButton" type="Button" parent="Root/Margin/Top/MerchantPanel/MV"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Werft neu scannen"
+
+[node name="MerchantFlow" type="HFlowContainer" parent="Root/Margin/Top/MerchantPanel/MV"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+
+[node name="BattleButton" type="Button" parent="Root/Margin/Top/MerchantPanel/MV"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "▶  Kampf starten"
+
+[node name="ChestPanel" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+
+[node name="CV" type="VBoxContainer" parent="Root/ChestPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleC" type="Label" parent="Root/ChestPanel/CV"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Frachtraum (nicht verbaute Systeme)"
+
+[node name="ChestFlow" type="HFlowContainer" parent="Root/ChestPanel/CV"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+
+[node name="FlyLayer" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="DragLayer" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_drag")
