@@ -7,6 +7,7 @@ const W_CELL := 26 # Zellgroesse der Item-Vorschauen im Haendler/Kiste
 
 const ITEM_WIDGET := preload("res://scenes/ItemWidget.tscn")
 const FLYING_PIECE := preload("res://scenes/FlyingPiece.tscn")
+const SHIP_VIEW := preload("res://scenes/ShipView.tscn")
 
 @onready var backpack: Backpack = %Backpack
 @onready var merchant_panel: PanelContainer = %MerchantPanel
@@ -55,11 +56,11 @@ func _on_battle() -> void:
 
 	var vp := get_viewport_rect().size
 	# Helden-Schiff als Overlay ueber dem Editor-Schiff.
-	var hero := ShipView.new()
-	hero.setup(GameState.player_modules, GameState.player_systems)
+	var hero: ShipView = SHIP_VIEW.instantiate()
 	hero.size = Vector2(440, 340)
-	hero.position = backpack.get_global_rect().get_center() - hero.size / 2.0 - fly_layer.global_position
 	fly_layer.add_child(hero)
+	hero.position = backpack.get_global_rect().get_center() - hero.size / 2.0 - fly_layer.global_position
+	hero.setup(GameState.player_modules, GameState.player_systems)
 
 	var tw := create_tween()
 	tw.set_parallel(true)
@@ -321,9 +322,12 @@ func _animate_to_chest(entries: Array) -> void:
 
 ## Spawnt ein Flug-Overlay und laesst es in die Kiste gleiten.
 func _fly_to_chest(entry: Dictionary, start_global: Vector2, start_cell_px: float, delay := 0.0) -> void:
+	var frames = null
+	if entry.data != null:
+		frames = entry.data.get("frames", null)
 	var fp: FlyingPiece = FLYING_PIECE.instantiate()
 	fly_layer.add_child(fp)
-	fp.setup(entry.kind, entry.tex, entry.base_cells, entry.cells, entry.rot, start_cell_px)
+	fp.setup(entry.kind, entry.tex, frames, entry.cells, entry.rot, start_cell_px)
 	fp.position = start_global - fly_layer.global_position
 
 	var target := _chest_drop_point()

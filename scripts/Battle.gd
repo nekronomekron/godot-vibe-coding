@@ -5,6 +5,11 @@ extends Control
 
 const HULL_COLOR := Color(0.36, 0.86, 0.45)
 
+const RESOURCE_CHIP := preload("res://scenes/ResourceChip.tscn")
+const POWER_COLUMN := preload("res://scenes/PowerColumn.tscn")
+const WEAPON_SLOT := preload("res://scenes/WeaponSlot.tscn")
+const SHIP_VIEW := preload("res://scenes/ShipView.tscn")
+
 var player := {}
 var enemy := {}
 var p_weapons: Array = []   # Laufzeit: {name, damage, charge_time, ammo, color, charge}
@@ -185,15 +190,14 @@ func _fill_resources(container: Node, st: Dictionary) -> void:
 	_add_chip(container, "Ausweichen", "%d%%" % st.evasion, Color(0.5, 0.85, 0.85))
 
 func _add_chip(container: Node, label: String, value: String, accent: Color) -> void:
-	var chip := ResourceChip.new()
+	var chip: ResourceChip = RESOURCE_CHIP.instantiate()
 	container.add_child(chip)
 	chip.setup(label, value, accent)
 
 func _fill_power(container: Node, st: Dictionary) -> void:
 	_clear(container)
 	for sub in st.subsystems:
-		var col := PowerColumn.new()
-		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var col: PowerColumn = POWER_COLUMN.instantiate()
 		container.add_child(col)
 		col.setup(sub.name, sub.allocated, sub.demand, sub.color)
 
@@ -207,8 +211,7 @@ func _build_weapon_slots() -> void:
 		%WeaponList.add_child(lbl)
 		return
 	for w in p_weapons:
-		var slot := WeaponSlot.new()
-		slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var slot: WeaponSlot = WEAPON_SLOT.instantiate()
 		%WeaponList.add_child(slot)
 		slot.setup(w.name, w.color)
 		p_slots.append(slot)
@@ -243,16 +246,16 @@ func _play_intro() -> void:
 	add_child(cine)
 
 	# Cinematic-Schiffe exakt in Groesse/Hoehe der HUD-Schiffe -> nahtloser Uebergang.
-	var cp := ShipView.new()
-	cp.setup(_pm, _ps)
+	var cp: ShipView = SHIP_VIEW.instantiate()
 	cp.size = pr.size
-	cp.position = Vector2(-pr.size.x - 80.0, pr.position.y) # links ausserhalb, gleiche Hoehe
 	cine.add_child(cp)
-	var ce := ShipView.new()
-	ce.setup(_em, _es)
+	cp.position = Vector2(-pr.size.x - 80.0, pr.position.y) # links ausserhalb, gleiche Hoehe
+	cp.setup(_pm, _ps)
+	var ce: ShipView = SHIP_VIEW.instantiate()
 	ce.size = er.size
-	ce.position = Vector2(vp.x + 80.0, er.position.y) # rechts ausserhalb, gleiche Hoehe
 	cine.add_child(ce)
+	ce.position = Vector2(vp.x + 80.0, er.position.y) # rechts ausserhalb, gleiche Hoehe
+	ce.setup(_em, _es)
 
 	var tw := create_tween()
 	# Spieler fliegt von links, kurz darauf der Gegner von rechts – jeweils exakt auf

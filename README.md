@@ -42,6 +42,8 @@ Ein Godot-4-Prototyp im Stil von **Backpack Battles** mit **Sci-Fi-Setting**: Du
 - `scenes/Battle.tscn` – **Kampfbildschirm im FTL/Down-with-the-Ship-Stil**: oben Hülle (segmentierter Balken), Schild-Schichten und Ressourcen-Chips (Munition/Raketen/Mannschaft/Energie/Ausweichen) beider Schiffe; mittig beide Schiffe + Gefechts-Panel; unten die Reaktor-Energieverteilung (vertikale Pips je Subsystem) und die Waffenleiste mit Echtzeit-Ladebalken. Waffen laden in Echtzeit auf, der Gegner feuert automatisch, „FEUERN" gibt geladene Waffen frei. Beim Schuss zeigt eine Effekt-Ebene (`FxLayer`) **Laserstrahlen, fliegende Raketen und Treffer-Einschläge** zwischen den Schiffen.
 - `scenes/ItemWidget.tscn` – wird zur Laufzeit für jedes System in Werft/Frachtraum instanziiert.
 - `scenes/FlyingPiece.tscn` – Overlay für die Flug-Animation in die Kiste.
+- `scenes/ShipView.tscn` – ein Schiff als Sprite-Aufbau (in Battle.tscn instanziiert + zur Laufzeit für Anflug/Hero).
+- `scenes/StatBar.tscn`, `ResourceChip.tscn`, `PowerColumn.tscn`, `WeaponSlot.tscn`, `ShieldRow.tscn` – wiederverwendbare HUD-Widgets (Control + Skript), in Battle.tscn instanziiert bzw. zur Laufzeit befüllt.
 
 ## Spielfluss
 Werft (Schiff bauen) → „Kampf starten" → **Anflug-Animation** → Gefecht → „Zurück zur Werft" (Schiff bleibt erhalten). Die Konfiguration wird im Autoload `GameState` gehalten; der Gegner wird per `ShipGen` aus denselben Modulen/Systemen erzeugt, Gefechtswerte per `ShipStats`.
@@ -53,16 +55,17 @@ Beim „Kampf starten": Werft-UI fliegt nach oben raus und blendet aus, das Schi
 Echte Vektorgrafiken (SVG, von Godot gerastert) unter `assets/`:
 - `assets/storage_cell.svg` – Tile für eine Modul-Zelle (Schiffsboden mit Eck-Markierungen).
 - `assets/items/*.svg` – Sprites: Laserkanone, Reaktor, Deflektor, Raketenwerfer, Sensor, Railgun, Triebwerk.
+- `assets/items/*_a1..a3.svg` + `*_frames.tres` – animierte Frames + `SpriteFrames` für die Waffen (Laserkanone, Railgun, Raketenwerfer).
 - `assets/ui_theme.tres` – Sci-Fi-Dark-Theme (HUD-Karten mit Cyan-Rändern/Glow, neon Buttons, **Pixel-Font VT323** als Default). Auf `Main`/`Battle` gesetzt, vererbt sich auf alle Panels/Buttons.
 - `assets/fonts/VT323-Regular.ttf` – Pixel-/CRT-Font (SIL Open Font License, siehe `assets/fonts/OFL.txt`). Custom-gezeichnete HUD-Texte nutzen sie via `get_theme_default_font()`.
 - `assets/hud/*.svg` – texturierte HUD-Grafiken im „Down with the Ship"-Stil (Nine-Patch): `panel.svg` (Metallrahmen mit Eckwinkeln/Nieten), `button.svg`/`_hover`/`_pressed` (beveled Buttons), `slot.svg` (vertiefter Balken-Track), `chip.svg` (Ressourcen-Plattenrahmen). Eingebunden via StyleBoxTexture im Theme bzw. `HudArt.gd` für die Custom-Widgets.
 
 ## Code
 - `scripts/Main.gd` – zentrale Drag-&-Drop-Logik (referenziert die Knoten aus `Main.tscn`)
-- `scripts/Backpack.gd` – Gitter-Modell, Platzierungsregeln, Zeichnen
-- `scripts/ItemDB.gd` – Vorlagen für Stauraum/Items inkl. Texturen, Zufallsangebot
-- `scripts/ItemArt.gd` – gemeinsame Zeichenroutine für Item-/Stauraum-Texturen (inkl. Rotation)
+- `scripts/Backpack.gd` – Gitter-Modell, Platzierungsregeln, Sprite-Rendering (Pan/Zoom via Node2D-Transform)
+- `scripts/ItemDB.gd` – Vorlagen für Stauraum/Items inkl. Texturen/SpriteFrames, Zufallsangebot
 - `scripts/ShapeUtil.gd` – Tetris-Formen rotieren/normalisieren
-- `scripts/ItemWidget.gd` – Item-Vorschau in Händler/Kiste
-- `scripts/FlyingPiece.gd` – einzelnes Flug-Overlay
+- `scripts/DrawProxy.gd` – Zeichen-Helfer-Node2D (Halo-/Overlay-Ebenen des Editors)
+- `scripts/ItemWidget.gd` – Item-Vorschau in Händler/Kiste (Sprite-Node)
+- `scripts/FlyingPiece.gd` – einzelnes Flug-Overlay (Sprite-Node)
 - `scripts/DragLayer.gd` – Ghost-Vorschau, die dem Mauszeiger folgt

@@ -11,6 +11,7 @@ const CELL := 48
 const ZOOM_MIN := 0.45
 const ZOOM_MAX := 2.5
 const PAN_PAD := 70.0 # so viel vom Stauraum-Mittelpunkt muss im Sichtfenster bleiben
+const CELL_GRID := Color(0.32, 0.86, 1.0, 0.34) # Zell-Trennlinien ueber den Items
 
 # Ansicht (Pan in Pixeln, Zoom als Faktor).
 var pan := Vector2.ZERO
@@ -31,13 +32,84 @@ var preview_cells := []
 var preview_valid := false
 var preview_active := false
 
+# Render-Ebenen: 'view' traegt die Pan/Zoom-Transform, darunter Halo -> Sprites -> Overlay.
+var view: Node2D
+var halo_layer: DrawProxy
+var tiles: Node2D
+var overlay_layer: DrawProxy
+
 func _ready() -> void:
 	resized.connect(_on_resized)
+	view = Node2D.new()
+	add_child(view)
+	halo_layer = DrawProxy.new()
+	halo_layer.draw_fn = _draw_halo
+	view.add_child(halo_layer)
+	tiles = Node2D.new()
+	view.add_child(tiles)
+	overlay_layer = DrawProxy.new()
+	overlay_layer.draw_fn = _draw_overlay
+	view.add_child(overlay_layer)
+	_refresh()
 
 func _on_resized() -> void:
-	if _view_initialized:
+	if not _view_initialized:
+		_ensure_view()
+	else:
 		_clamp_pan()
-	queue_redraw()
+	_update_view()
+
+## Setzt die Pan/Zoom-Transform der Ansicht (alle Render-Ebenen liegen darunter).
+func _update_view() -> void:
+	if view != null:
+		view.position = pan
+		view.scale = Vector2(zoom, zoom)
+
+## Baut die Sprite-Ebene neu auf (Module + Systeme) und frischt die Overlays auf.
+func _refresh() -> void:
+	if tiles == null:
+		return
+	for c in tiles.get_children():
+		tiles.remove_child(c)
+		c.queue_free()
+	var locked := {}
+	for pc in storage_pieces:
+		if pc.locked:
+			for wc in pc.cells:
+				locked[wc] = true
+	var tile_tex := ItemDB.storage_tex()
+	var sf := CELL / 64.0
+	for wc in storage_cells.keys():
+		var spr := Sprite2D.new()
+		spr.texture = tile_tex
+		spr.scale = Vector2(sf, sf)
+		spr.position = Vector2(wc.x * CELL + CELL / 2.0, wc.y * CELL + CELL / 2.0)
+		if locked.has(wc):
+			spr.modulate = Color(0.55, 1.0, 0.92) # Kommandokern hervorheben
+		tiles.add_child(spr)
+	for it in items:
+		var data: Dictionary = it.data
+		var grid := ShapeUtil.size_of(it.local_cells)
+		var top_left := Vector2(it.origin.x * CELL, it.origin.y * CELL)
+		var center := top_left + Vector2(grid.x, grid.y) * CELL / 2.0
+		var node: Node2D
+		if data.has("frames"):
+			var asp := AnimatedSprite2D.new()
+			asp.sprite_frames = data.frames
+			asp.play("default")
+			node = asp
+		else:
+			var spr2 := Sprite2D.new()
+			spr2.texture = data.tex
+			node = spr2
+		node.scale = Vector2(sf, sf)
+		node.rotation = it.rot * PI / 2.0
+		node.position = center
+		tiles.add_child(node)
+	if halo_layer != null:
+		halo_layer.queue_redraw()
+	if overlay_layer != null:
+		overlay_layer.queue_redraw()
 
 ## Start-Rucksack: ein fest verankerter 2x2-Stauraum in der Mitte.
 func setup_initial() -> void:
@@ -47,7 +119,7 @@ func setup_initial() -> void:
 	for o in base:
 		world.append(origin + o)
 	_add_storage(world, true)
-	queue_redraw()
+	_refresh()
 
 func _add_storage(world_cells: Array, locked: bool) -> void:
 	storage_pieces.append({"cells": world_cells.duplicate(), "locked": locked})
@@ -68,7 +140,7 @@ func load_config(modules: Array, systems: Array) -> void:
 		for lc in s.local_cells:
 			world.append(s.origin + lc)
 		place_item(int(s.data.uid), s.data, world, int(s.rot))
-	queue_redraw()
+	_refresh()
 
 func in_bounds(c: Vector2i) -> bool:
 	return c.x >= 0 and c.y >= 0 and c.x < COLS and c.y < ROWS
@@ -83,7 +155,7 @@ func cell_at_local(p: Vector2) -> Vector2i:
 func pan_by(delta: Vector2) -> void:
 	pan += delta
 	_clamp_pan()
-	queue_redraw()
+	_update_view()
 
 ## Zoomt um den Punkt 'local' (Position im Control), sodass dieser fix bleibt.
 func zoom_at(local: Vector2, factor: float) -> void:
@@ -94,7 +166,7 @@ func zoom_at(local: Vector2, factor: float) -> void:
 	zoom = new_zoom
 	pan = local - world * zoom
 	_clamp_pan()
-	queue_redraw()
+	_update_view()
 
 ## Bounding-Box aller Stauraum-Zellen in Welt-Pixeln.
 func _storage_bbox() -> Rect2:
@@ -157,7 +229,7 @@ func can_place_storage(world_cells: Array) -> bool:
 
 func place_storage(world_cells: Array) -> void:
 	_add_storage(world_cells, false)
-	queue_redraw()
+	_refresh()
 
 # --- Items platzieren ----------------------------------------------------
 
@@ -177,7 +249,7 @@ func displace_items_at(world_cells: Array) -> Array:
 		removed[wc] = true
 	var entries := _displace_items_on(removed)
 	if not entries.is_empty():
-		queue_redraw()
+		_refresh()
 	return entries
 
 func place_item(uid: int, data: Dictionary, world_cells: Array, rot: int) -> void:
@@ -193,7 +265,7 @@ func place_item(uid: int, data: Dictionary, world_cells: Array, rot: int) -> voi
 	items.append({"uid": uid, "data": data, "origin": origin, "local_cells": local, "rot": rot})
 	for wc in world_cells:
 		occupancy[wc] = uid
-	queue_redraw()
+	_refresh()
 
 ## Hebt ein Item an der Zelle auf und gibt es zurueck (oder null).
 func pick_item_at(cell: Vector2i):
@@ -211,7 +283,7 @@ func pick_item_at(cell: Vector2i):
 	for lc in it.local_cells:
 		occupancy.erase(it.origin + lc)
 	items.remove_at(idx)
-	queue_redraw()
+	_refresh()
 	return it
 
 ## Hebt ein nicht-verankertes Stauraum-Teil auf.
@@ -283,7 +355,7 @@ func pick_storage_at(cell: Vector2i):
 	var displaced := _displace_items_on(removed)
 	displaced.append_array(loose_entries)
 
-	queue_redraw()
+	_refresh()
 	return {
 		"local_cells": ShapeUtil.normalize(picked_cells),
 		"displaced": displaced,
@@ -344,11 +416,13 @@ func set_preview(world_cells: Array, valid: bool) -> void:
 	preview_cells = world_cells
 	preview_valid = valid
 	preview_active = true
-	queue_redraw()
+	if overlay_layer != null:
+		overlay_layer.queue_redraw()
 
 func clear_preview() -> void:
 	preview_active = false
-	queue_redraw()
+	if overlay_layer != null:
+		overlay_layer.queue_redraw()
 
 # --- Zeichnen ------------------------------------------------------------
 
@@ -371,40 +445,23 @@ func _compute_halo() -> Dictionary:
 				halo[cell] = maxf(halo.get(cell, 0.0), a)
 	return halo
 
-func _cell_rect(cell: Vector2i, cs: float) -> Rect2:
-	return Rect2(Vector2(cell.x * CELL, cell.y * CELL) * zoom + pan, Vector2(cs, cs))
-
-func _draw() -> void:
-	_ensure_view()
-	var storage_tex := ItemDB.storage_tex()
-	var cs := CELL * zoom
-
-	# Angedeutete freie Andock-Zellen rund um die Module (dezenter Geister-Slot).
+## Halo-Ebene (hinter den Modulen): angedeutete freie Andock-Zellen, in Weltkoordinaten.
+func _draw_halo(node: Node2D) -> void:
 	var halo := _compute_halo()
 	for cell in halo:
 		var a: float = halo[cell]
-		var rect := _cell_rect(cell, cs).grow(-2.0)
-		draw_rect(rect, Color(0.20, 0.55, 0.65, a * 0.10), true)
-		draw_rect(rect, Color(0.32, 0.82, 0.92, a * 0.5), false, maxf(1.0, zoom))
+		var r := Rect2(Vector2(cell.x * CELL, cell.y * CELL), Vector2(CELL, CELL)).grow(-2.0)
+		node.draw_rect(r, Color(0.20, 0.55, 0.65, a * 0.10), true)
+		node.draw_rect(r, Color(0.32, 0.82, 0.92, a * 0.5), false, 1.5)
 
-	# Stauraum-Zellen (Tile-Textur).
-	for wc in storage_cells.keys():
-		draw_texture_rect(storage_tex, _cell_rect(wc, cs), false)
-
-	# Verankerten Start-Stauraum hervorheben.
-	for pc in storage_pieces:
-		if pc.locked:
-			for wc in pc.cells:
-				var r := _cell_rect(wc, cs)
-				draw_rect(Rect2(r.position + Vector2(2, 2), r.size - Vector2(4, 4)), Color(0.28, 0.95, 0.85), false, maxf(1.5, 2.0 * zoom))
-
-	# Platzierte Items (Sprite ueber die Bounding-Box, gedreht).
+## Overlay-Ebene (ueber den Sprites): Zellraster der Items + Platzierungs-Vorschau.
+func _draw_overlay(node: Node2D) -> void:
 	for it in items:
-		var top_left := Vector2(it.origin.x * CELL, it.origin.y * CELL) * zoom + pan
-		ItemArt.draw_piece(self, ItemDB.Kind.ITEM, it.data.tex, it.data.cells, it.local_cells, top_left, cs, it.rot)
-
-	# Vorschau (gruen = moeglich, rot = nicht moeglich).
+		for lc in it.local_cells:
+			var wc: Vector2i = it.origin + lc
+			var r := Rect2(Vector2(wc.x * CELL, wc.y * CELL), Vector2(CELL, CELL)).grow(-1.0)
+			node.draw_rect(r, CELL_GRID, false, 1.2)
 	if preview_active:
 		var col := Color(0.20, 0.90, 0.30, 0.45) if preview_valid else Color(0.95, 0.20, 0.20, 0.45)
 		for wc in preview_cells:
-			draw_rect(_cell_rect(wc, cs), col, true)
+			node.draw_rect(Rect2(Vector2(wc.x * CELL, wc.y * CELL), Vector2(CELL, CELL)), col, true)

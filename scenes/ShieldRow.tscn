@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://bbkpshieldrow0001"]
+
+[ext_resource type="Script" path="res://scripts/ShieldRow.gd" id="1"]
+
+[node name="ShieldRow" type="Control"]
+custom_minimum_size = Vector2(0, 20)
+script = ExtResource("1")

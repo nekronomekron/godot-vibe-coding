@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://bbkpshipview0001"]
+
+[ext_resource type="Script" path="res://scripts/ShipView.gd" id="1"]
+
+[node name="ShipView" type="Control"]
+custom_minimum_size = Vector2(260, 220)
+clip_contents = true
+script = ExtResource("1")

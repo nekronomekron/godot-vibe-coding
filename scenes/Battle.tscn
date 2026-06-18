@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" path="res://scripts/Battle.gd" id="1_battle"]
 [ext_resource type="Theme" path="res://assets/ui_theme.tres" id="2_theme"]
-[ext_resource type="Script" path="res://scripts/ShipView.gd" id="3_ship"]
-[ext_resource type="Script" path="res://scripts/StatBar.gd" id="4_bar"]
-[ext_resource type="Script" path="res://scripts/ShieldRow.gd" id="5_shield"]
+[ext_resource type="PackedScene" uid="uid://bbkpshipview0001" path="res://scenes/ShipView.tscn" id="3_ship"]
+[ext_resource type="PackedScene" uid="uid://bbkpstatbar0001" path="res://scenes/StatBar.tscn" id="4_bar"]
+[ext_resource type="PackedScene" uid="uid://bbkpshieldrow0001" path="res://scenes/ShieldRow.tscn" id="5_shield"]
 [ext_resource type="Script" path="res://scripts/FxLayer.gd" id="6_fx"]
 
 [node name="Battle" type="Control"]
@@ -62,11 +62,9 @@ theme_override_colors/font_color = Color(0.5, 0.92, 1, 1)
 theme_override_font_sizes/font_size = 17
 text = "Deine Fregatte"
 
-[node name="PlayerHull" type="Control" parent="Margin/VBox/TopHUD/PlayerHud/V"]
+[node name="PlayerHull" parent="Margin/VBox/TopHUD/PlayerHud/V" instance=ExtResource("4_bar")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
-script = ExtResource("4_bar")
 
 [node name="ShieldLine" type="HBoxContainer" parent="Margin/VBox/TopHUD/PlayerHud/V"]
 layout_mode = 2
@@ -78,12 +76,10 @@ theme_override_colors/font_color = Color(0.55, 0.72, 0.82, 1)
 theme_override_font_sizes/font_size = 12
 text = "SCHILDE"
 
-[node name="PlayerShields" type="Control" parent="Margin/VBox/TopHUD/PlayerHud/V/ShieldLine"]
+[node name="PlayerShields" parent="Margin/VBox/TopHUD/PlayerHud/V/ShieldLine" instance=ExtResource("5_shield")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 size_flags_horizontal = 3
-script = ExtResource("5_shield")
 
 [node name="ResourceList" type="HBoxContainer" parent="Margin/VBox/TopHUD/PlayerHud/V"]
 unique_name_in_owner = true
@@ -106,11 +102,9 @@ theme_override_font_sizes/font_size = 17
 horizontal_alignment = 2
 text = "Feindschiff"
 
-[node name="EnemyHull" type="Control" parent="Margin/VBox/TopHUD/EnemyHud/V"]
+[node name="EnemyHull" parent="Margin/VBox/TopHUD/EnemyHud/V" instance=ExtResource("4_bar")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
-script = ExtResource("4_bar")
 
 [node name="ShieldLine" type="HBoxContainer" parent="Margin/VBox/TopHUD/EnemyHud/V"]
 layout_mode = 2
@@ -122,12 +116,10 @@ theme_override_colors/font_color = Color(0.55, 0.72, 0.82, 1)
 theme_override_font_sizes/font_size = 12
 text = "SCHILDE"
 
-[node name="EnemyShields" type="Control" parent="Margin/VBox/TopHUD/EnemyHud/V/ShieldLine"]
+[node name="EnemyShields" parent="Margin/VBox/TopHUD/EnemyHud/V/ShieldLine" instance=ExtResource("5_shield")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 size_flags_horizontal = 3
-script = ExtResource("5_shield")
 
 [node name="MidRow" type="HBoxContainer" parent="Margin/VBox"]
 layout_mode = 2
@@ -148,13 +140,10 @@ theme_override_colors/font_color = Color(0.5, 0.78, 0.88, 1)
 theme_override_font_sizes/font_size = 13
 text = "DECKPLAN"
 
-[node name="PlayerShip" type="Control" parent="Margin/VBox/MidRow/PlayerShipPanel/V"]
+[node name="PlayerShip" parent="Margin/VBox/MidRow/PlayerShipPanel/V" instance=ExtResource("3_ship")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(260, 220)
 layout_mode = 2
 size_flags_vertical = 3
-clip_contents = true
-script = ExtResource("3_ship")
 
 [node name="CenterPanel" type="PanelContainer" parent="Margin/VBox/MidRow"]
 custom_minimum_size = Vector2(240, 0)
@@ -205,13 +194,10 @@ theme_override_font_sizes/font_size = 13
 horizontal_alignment = 2
 text = "FEINDKONTAKT"
 
-[node name="EnemyShip" type="Control" parent="Margin/VBox/MidRow/EnemyShipPanel/V"]
+[node name="EnemyShip" parent="Margin/VBox/MidRow/EnemyShipPanel/V" instance=ExtResource("3_ship")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(260, 220)
 layout_mode = 2
 size_flags_vertical = 3
-clip_contents = true
-script = ExtResource("3_ship")
 
 [node name="BottomRow" type="HBoxContainer" parent="Margin/VBox"]
 layout_mode = 2
