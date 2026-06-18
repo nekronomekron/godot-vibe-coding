@@ -12,6 +12,8 @@ const ZOOM_MIN := 0.45
 const ZOOM_MAX := 2.5
 const PAN_PAD := 70.0 # so viel vom Stauraum-Mittelpunkt muss im Sichtfenster bleiben
 const CELL_GRID := Color(0.32, 0.86, 1.0, 0.34) # Zell-Trennlinien ueber den Items
+const MODULE_BORDER := Color(0.55, 0.85, 1.0, 0.85) # Umriss eines Moduls
+const MODULE_BORDER_LOCKED := Color(0.30, 0.97, 0.85, 0.95) # Umriss des Kommandokerns
 
 # Ansicht (Pan in Pixeln, Zoom als Faktor).
 var pan := Vector2.ZERO
@@ -454,8 +456,9 @@ func _draw_halo(node: Node2D) -> void:
 		node.draw_rect(r, Color(0.20, 0.55, 0.65, a * 0.10), true)
 		node.draw_rect(r, Color(0.32, 0.82, 0.92, a * 0.5), false, 1.5)
 
-## Overlay-Ebene (ueber den Sprites): Zellraster der Items + Platzierungs-Vorschau.
+## Overlay-Ebene (ueber den Sprites): Modul-Umrisse + Zellraster der Items + Vorschau.
 func _draw_overlay(node: Node2D) -> void:
+	_draw_module_borders(node)
 	for it in items:
 		for lc in it.local_cells:
 			var wc: Vector2i = it.origin + lc
@@ -465,3 +468,25 @@ func _draw_overlay(node: Node2D) -> void:
 		var col := Color(0.20, 0.90, 0.30, 0.45) if preview_valid else Color(0.95, 0.20, 0.20, 0.45)
 		for wc in preview_cells:
 			node.draw_rect(Rect2(Vector2(wc.x * CELL, wc.y * CELL), Vector2(CELL, CELL)), col, true)
+
+## Zeichnet um jedes Modul einen Rahmen entlang der aeusseren Tile-Kanten:
+## nur die Kanten, deren Nachbarzelle nicht zum selben Modul gehoert.
+func _draw_module_borders(node: Node2D) -> void:
+	for pc in storage_pieces:
+		var cellset := {}
+		for c in pc.cells:
+			cellset[c] = true
+		var col: Color = MODULE_BORDER_LOCKED if pc.locked else MODULE_BORDER
+		for c: Vector2i in pc.cells:
+			var x0 := c.x * CELL
+			var y0 := c.y * CELL
+			var x1 := (c.x + 1) * CELL
+			var y1 := (c.y + 1) * CELL
+			if not cellset.has(c + Vector2i(0, -1)):
+				node.draw_line(Vector2(x0, y0), Vector2(x1, y0), col, 2.0)
+			if not cellset.has(c + Vector2i(0, 1)):
+				node.draw_line(Vector2(x0, y1), Vector2(x1, y1), col, 2.0)
+			if not cellset.has(c + Vector2i(-1, 0)):
+				node.draw_line(Vector2(x0, y0), Vector2(x0, y1), col, 2.0)
+			if not cellset.has(c + Vector2i(1, 0)):
+				node.draw_line(Vector2(x1, y0), Vector2(x1, y1), col, 2.0)
